@@ -14,8 +14,9 @@ This project is creating an database content management system of a company DB b
 
 
 ## Installation
-run command: npm install
-login to mysql server and run the schema.sql & seeds.sql in db folder.
+1. run command: npm install
+2. login to mysql server and run the schema.sql & seeds.sql in db folder.
+3. add .env file to configure database credential （credential information will be used in index.js line 11-12)
 
 ## Usage
 1. Go to project directory and run command: node index.js
@@ -46,7 +47,7 @@ BenLiu104 : https://github.com/BenLiu104
 License - MIT
 
 ## Tests
-N/A
+run query.sql in db folder to test seeded data.
 
 
 
