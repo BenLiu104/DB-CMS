@@ -15,10 +15,12 @@ const db = mysql2.createConnection(
     console.log(`Connected to the Company_db database.`)
 );
 
+//Main loop to ask questions
 async function getMenu() {
-
+    //prompt main menu
     let action = await inquirer.prompt(questions.menu);
-    //"View all roles", "View all employees", "View all departments"
+
+    //show all role
     if (action.action == "View all roles") {
         db.query(sql.role, (err, result) => {
             if (err) { console.error(err) }
@@ -30,6 +32,7 @@ async function getMenu() {
         })
     }
 
+    //show all department info
     if (action.action == "View all departments") {
 
         db.query(sql.department, (err, result) => {
@@ -42,6 +45,7 @@ async function getMenu() {
         })
     }
 
+    //show all employees info
     if (action.action == "View all employees") {
 
         db.query(sql.employee, (err, result) => {
@@ -54,6 +58,7 @@ async function getMenu() {
         })
     }
 
+    // add a new department
     if (action.action == "Add a department") {
         let answer = await inquirer.prompt(questions.addDepart);
         let para = [answer.department];
@@ -67,14 +72,17 @@ async function getMenu() {
         })
     }
 
+    //add a new role
     if (action.action == "Add a role") {
+        // ask user the new role name
         let answer = await inquirer.prompt(questions.addRole);
+
         db.query(sql.department, (err, result) => {
             if (err) { console.error(err) }
             else {
 
                 let List = result.map(elm => elm.name);
-
+                //provide desire department list
                 inquirer.prompt(
                     {
                         message: "Which department does the role belong to?",
@@ -86,7 +94,7 @@ async function getMenu() {
                     console.log(ans.department);
                     let depart = result.filter(dep => dep.name == ans.department)
                     let para = [answer.role, answer.salary, depart[0].id];
-
+                    // add new role to database
                     db.query(sql.addRole, para, (err, result) => {
                         if (err) { console.error(err) }
                         else {
@@ -100,13 +108,13 @@ async function getMenu() {
         })
     }
 
-
+    //add a new employee
     if (action.action == "Add an employee") {
+        //ask new employee name info
         let answer = await inquirer.prompt(questions.addEmployee);
         db.query(`select id, title from role;`, async (err, roleInfo) => {
-            // console.log(roleInfo);
             let roleList = roleInfo.map(elm => elm.title);
-            // console.log(roleList);
+            //provide existing role list for choice
             let data = await inquirer.prompt(
                 {
                     message: "What is the role of the employee?",
@@ -118,7 +126,7 @@ async function getMenu() {
             let role = roleInfo.filter(elm => elm.title == data.role)
 
             db.query(`select employee.id, concat(first_name,' ',last_name,' - ',title) as manager from employee join role on role_id=role.id where manager_id is null;`, async (err, managerInfo) => {
-
+                //provide manager list for choice
                 let managerList = managerInfo.map(elm => elm.manager);
                 managerList.push("NULL");
                 let data = await inquirer.prompt(
@@ -132,7 +140,7 @@ async function getMenu() {
                 let manager = managerInfo.filter(elm => elm.manager == data.manager);
                 if (manager.length == 0) {
                     let param = [answer.firstName, answer.lastName, role[0].id];
-
+                    //add new manager to database
                     db.query(sql.addManager, param, (err, result) => {
                         if (err) { console.error(err) }
                         else {
@@ -143,7 +151,7 @@ async function getMenu() {
                     })
                 } else {
                     let param = [answer.firstName, answer.lastName, role[0].id, manager[0].id];
-
+                    //add new non-manager employee to database
                     db.query(sql.addEmployee, param, (err, result) => {
                         if (err) { console.error(err) }
                         else {
@@ -157,7 +165,7 @@ async function getMenu() {
         })
     }
 
-
+    //view employees by manager
     if (action.action == "View employees by manager") {
         db.query(`select employee.id, concat(first_name,' ',last_name,' - ',title) as manager from employee join role on role_id=role.id where manager_id is null;`, async (err, managerInfo) => {
 
@@ -184,6 +192,8 @@ async function getMenu() {
 
 
     }
+
+    //view employees by department
     if (action.action == "View employees by department") {
         db.query(sql.department, async (err, result) => {
             if (err) { console.error(err) }
@@ -210,6 +220,7 @@ async function getMenu() {
         })
     }
 
+    //update an employee's manager
     if (action.action == "Update employee managers") {
 
         db.query(`select id, concat(first_name,' ',last_name) as Employee from employee;`, async (err, employeeInfo) => {
@@ -226,7 +237,6 @@ async function getMenu() {
                     }
                 )
                 let emIDList = employeeInfo.filter(elm => elm.Employee == selected.employee);
-
 
                 db.query(`select employee.id, concat(first_name,' ',last_name,' - ',title) as manager from employee join role on role_id=role.id where manager_id is null;`, async (err, managerInfo) => {
 
@@ -257,6 +267,7 @@ async function getMenu() {
 
     }
 
+    //delete an employee
     if (action.action == "Delete an employee") {
 
         db.query(`select id, concat(first_name,' ',last_name) as Employee from employee;`, async (err, employeeInfo) => {
@@ -286,11 +297,10 @@ async function getMenu() {
 
     }
 
+    //delete a role
     if (action.action == "Delete a role") {
         db.query(`select id, title from role;`, async (err, roleInfo) => {
-            // console.log(roleInfo);
             let roleList = roleInfo.map(elm => elm.title);
-            // console.log(roleList);
             let data = await inquirer.prompt(
                 {
                     message: "Please select the role which will be deleted.",
@@ -312,7 +322,7 @@ async function getMenu() {
     }
 
 
-
+    //delete a department
     if (action.action == "Delete a department") {
         db.query(sql.department, async (err, result) => {
             if (err) { console.error(err) }
@@ -341,7 +351,7 @@ async function getMenu() {
     }
 
 
-
+    //view total budget for a department
     if (action.action == "View department budget") {
         db.query(sql.department, async (err, result) => {
             if (err) { console.error(err) }
@@ -369,7 +379,7 @@ async function getMenu() {
         })
     }
 
-
+    //option to exit the application
     if (action.action == "Exit") {
         process.exit();
     }
